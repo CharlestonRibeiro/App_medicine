@@ -35,6 +35,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       ),
       backgroundColor: ColorsApp.white,
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.red,
         onPressed: () {
           _controller.saveMedicine();
         },
