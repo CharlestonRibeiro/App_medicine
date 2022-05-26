@@ -11,7 +11,17 @@ class ImageForm extends StatelessWidget {
     final _controller = Provider.of<AddMedicineController>(context);
     return Column(
       children: [
-        if (_controller.imageUploaded == null ||
+        if (_controller.loading) ...[
+          SizedBox(
+            height: 200,
+            child: Center(
+              child: CircularProgressIndicator.adaptive(
+                value: _controller.total,
+                backgroundColor: Colors.blue,
+              ),
+            ),
+          )
+        ] else if (_controller.imageUploaded == null ||
             _controller.xFile == null && _controller.medicine.image == '') ...[
           const SizedBox(
             height: 200,
@@ -37,21 +47,26 @@ class ImageForm extends StatelessWidget {
               ),
             ],
           )
-        ] else if (_controller.loading) ...[
-          SizedBox(
-            height: 200,
-            child: Center(
-              child: CircularProgressIndicator.adaptive(
-                value: _controller.total,
-              ),
-            ),
-          )
         ] else ...[
           SizedBox(
             height: 200,
             child: AspectRatio(
               aspectRatio: 1,
-              child: Image.network(_controller.imageUploaded!),
+              child: Image.network(
+                _controller.imageUploaded!,
+                loadingBuilder: (BuildContext context, Widget child,
+                    ImageChunkEvent? loadingProgress,) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ]

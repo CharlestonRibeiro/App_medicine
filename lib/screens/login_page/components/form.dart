@@ -13,6 +13,7 @@ class FormLogin extends StatefulWidget {
 
 class _FormLoginState extends State<FormLogin>
     with SingleTickerProviderStateMixin {
+  bool isObscure = true;
   late TabController _tabController;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -23,6 +24,14 @@ class _FormLoginState extends State<FormLogin>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
@@ -144,7 +153,7 @@ class _FormLoginState extends State<FormLogin>
                         text: 'E-mail',
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        obscureText: false,
+                        isPassword: false,
                       ),
                     ],
                   ),
@@ -164,12 +173,12 @@ class _FormLoginState extends State<FormLogin>
           text: 'E-mail',
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
-          obscureText: false,
+          isPassword: false,
         ),
         _buildTextField(
           text: 'Senha',
           controller: _passwordController,
-          obscureText: true,
+          isPassword: true,
           keyboardType: TextInputType.text,
         ),
       ],
@@ -202,17 +211,18 @@ class _FormLoginState extends State<FormLogin>
     required String text,
     required TextInputType keyboardType,
     required TextEditingController controller,
-    required bool obscureText,
+    required bool isPassword,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20, right: 12, left: 12),
       child: TextFormField(
         controller: controller,
         textAlign: TextAlign.left,
-        obscureText: obscureText,
         keyboardType: keyboardType,
+        // ignore: avoid_bool_literals_in_conditional_expressions
+        obscureText: isPassword ? isObscure : false,
         cursorColor: Colors.blue,
-        validator: obscureText
+        validator: isPassword
             ? (value) {
                 if (value!.isEmpty) {
                   return 'Informa sua senha!';
@@ -227,8 +237,24 @@ class _FormLoginState extends State<FormLogin>
                 }
                 return null;
               },
+
         decoration: InputDecoration(
-          contentPadding: const EdgeInsets.only(left: 30),
+          contentPadding: const EdgeInsets.only(
+            left: 30,
+          ),
+          suffixIcon: isPassword
+              ? IconButton(
+                  onPressed: () {
+                    setState(() {
+                      isObscure = !isObscure;
+                    });
+                  },
+                  icon: Icon(
+                    isObscure ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.white,
+                  ),
+                )
+              : null,
           hintText: text,
           hintStyle: const TextStyle(
             color: Colors.white70,

@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
@@ -12,6 +13,7 @@ class Medicine extends ChangeNotifier {
   final String? interval;
   final String? imageName;
   final String? listInterval;
+  final String? notificationsId;
 
   Medicine({
     this.id,
@@ -23,6 +25,7 @@ class Medicine extends ChangeNotifier {
     this.interval,
     this.imageName,
     this.listInterval,
+    this.notificationsId,
   });
 
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -43,6 +46,7 @@ class Medicine extends ChangeNotifier {
       interval: map['interval'].toString(),
       imageName: map['imageName'].toString(),
       listInterval: map['listInterval'].toString(),
+      notificationsId: map['notificationsId'].toString(),
     );
   }
 

@@ -11,13 +11,17 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBlueColor,
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: const Text('Medicine App'),
-        centerTitle: true,
-      ),
-      body: const Center(
-        child: FormLogin(),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(
+              height: 250,
+              width: 200,
+              child: Image.asset('assets/icon/timetodose.png'),
+            ),
+            const FormLogin(),
+          ],
+        ),
       ),
     );
   }

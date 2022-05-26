@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:app_medicine/helpers/notification_service.dart';
 import 'package:app_medicine/models/medicine.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -17,6 +19,7 @@ class EditMedicineController extends ChangeNotifier {
   String listInterval = '';
   List<String>? listRecomendations;
   int? intervalSelected;
+  String notificationId = '';
   FirebaseFirestore get firestore => FirebaseFirestore.instance;
 
   void setMedicine(Medicine medicine) {
@@ -42,17 +45,80 @@ class EditMedicineController extends ChangeNotifier {
     final double interval = intervalSelected!.toDouble();
 
     if (aux <= 23) {
+      final a =
+          aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1).split('.');
+
+      final random = Random().nextInt(100000);
+      NotificationService().scheduleAtTimeNotification(
+        CustomNotification(
+          id: random,
+          title: 'Não esqueça de tomar o ${nameController.text} agora!',
+          body: 'Acesse à lista de medicamentos!',
+          payload: '/',
+        ),
+        int.parse(a[0]),
+        int.parse(a[1]),
+      );
+      notificationId = random.toString();
       listInterval = '${aux.toStringAsFixed(2)} ';
     } else {
-      listInterval = '${(aux - 24).toStringAsFixed(2)}} ';
+      final a =
+          aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1).split('.');
+
+      final random = Random().nextInt(100000);
+      NotificationService().scheduleAtTimeNotification(
+        CustomNotification(
+          id: random,
+          title: 'Não esqueça de tomar o ${nameController.text} agora!',
+          body: 'Acesse à lista de medicamentos!',
+          payload: '/',
+        ),
+        int.parse(a[0]),
+        int.parse(a[1]),
+      );
+      notificationId = random.toString();
+      listInterval =
+          '${(aux - 24).toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1)} ';
     }
     while (double.parse(aux.toStringAsFixed(2)) != initalTime) {
       aux += interval;
       if (aux >= 24) {
         aux -= 24;
-        listInterval = '$listInterval${aux.toStringAsFixed(2)} ';
+        final a =
+            aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1).split('.');
+
+        final random = Random().nextInt(100000);
+        NotificationService().scheduleAtTimeNotification(
+          CustomNotification(
+            id: random,
+            title: 'Não esqueça de tomar o ${nameController.text} agora!',
+            body: 'Acesse à lista de medicamentos!',
+            payload: '/',
+          ),
+          int.parse(a[0]),
+          int.parse(a[1]),
+        );
+        notificationId = '$notificationId $random';
+        listInterval =
+            '$listInterval${aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1)} ';
       } else {
-        listInterval = '$listInterval${aux.toStringAsFixed(2)} ';
+        final a = selectedTime!.minute > 9
+            ? aux.toStringAsFixed(2).split('.')
+            : aux.toStringAsFixed(1).split('.');
+        final random = Random().nextInt(100000);
+        NotificationService().scheduleAtTimeNotification(
+          CustomNotification(
+            id: random,
+            title: 'Não esqueça de tomar o ${nameController.text} agora!',
+            body: 'Acesse à lista de medicamentos!',
+            payload: '/',
+          ),
+          int.parse(a[0]),
+          int.parse(a[1]),
+        );
+        notificationId = '$notificationId $random';
+        listInterval =
+            '$listInterval${aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1)} ';
       }
     }
     return listInterval.replaceAll('.', ':');
@@ -135,6 +201,7 @@ class EditMedicineController extends ChangeNotifier {
         );
       } else {
         try {
+          cancelAllNotifications();
           await firestore
               .collection('users')
               .doc(FirebaseAuth.instance.currentUser!.email)
@@ -150,6 +217,7 @@ class EditMedicineController extends ChangeNotifier {
             'timeInitial': '${selectedTime!.hour}:${selectedTime!.minute}',
             'interval': intervalSelected,
             'listInterval': getInterval(),
+            'notificationsId': notificationId,
           });
 
           _buildSnackBar(
@@ -159,14 +227,6 @@ class EditMedicineController extends ChangeNotifier {
           );
 
           clean();
-          NotificationService().showNotificationPeriodic(
-            CustomNotification(
-              id: int.parse(medicine!.id!),
-              title: 'Não esqueça de tomar seus remédios!',
-              body: 'Acesse à lista de medicamentos!',
-              payload: '/',
-            ),
-          );
           _navigatorPushNamed();
         } catch (e) {
           _buildSnackBar(
@@ -177,6 +237,12 @@ class EditMedicineController extends ChangeNotifier {
         }
       }
     }
+  }
+
+  void cancelAllNotifications() {
+    medicine!.notificationsId!.split(' ').forEach((element) {
+      NotificationService().cancelLocalNotification(int.parse(element));
+    });
   }
 
   void _navigatorPushNamed() {

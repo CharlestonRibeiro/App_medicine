@@ -16,6 +16,7 @@ class HomeScreen extends StatefulWidget {
 
 class _MedicineScreenState extends State<HomeScreen> {
   String search = '';
+
   @override
   Widget build(BuildContext context) {
     final AuthService auth = Provider.of<AuthService>(context);
@@ -26,6 +27,7 @@ class _MedicineScreenState extends State<HomeScreen> {
           Navigator.of(context).pushNamed(
             '/add',
           );
+
         },
       ),
       appBar: AppBar(
@@ -47,7 +49,7 @@ class _MedicineScreenState extends State<HomeScreen> {
         ),
         automaticallyImplyLeading: false,
         title: search.isEmpty
-            ? Text('Medicine App', style: TextStyles.titleAppBar)
+            ? Text('TimeToDose', style: TextStyles.titleAppBar)
             : LayoutBuilder(
                 builder: (_, constraints) {
                   return GestureDetector(

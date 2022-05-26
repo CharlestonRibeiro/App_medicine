@@ -1,3 +1,4 @@
+import 'package:app_medicine/helpers/notification_service.dart';
 import 'package:app_medicine/models/medicine.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -11,6 +12,12 @@ class DetailsMedicineController extends ChangeNotifier {
   void setMedicine(Medicine medicine) {
     this.medicine = medicine;
     notifyListeners();
+  }
+
+  void cancelAllNotifications() {
+    medicine!.notificationsId!.split(' ').forEach((element) {
+      NotificationService().cancelLocalNotification(int.parse(element));
+    });
   }
 
   Future remove(BuildContext context, String id) async {
@@ -35,6 +42,7 @@ class DetailsMedicineController extends ChangeNotifier {
                   duration: Duration(seconds: 3),
                 ),
               );
+              cancelAllNotifications();
             },
             child: const Text('Sim'),
           ),

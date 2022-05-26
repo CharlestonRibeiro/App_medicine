@@ -51,7 +51,7 @@ class NotificationService {
   }
 
   Future _initializeNotifications() async {
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const android = AndroidInitializationSettings('@mipmap/launcher_icon');
     await localNotificationsPlugin.initialize(
       const InitializationSettings(
         android: android,
@@ -64,6 +64,62 @@ class NotificationService {
     if (payload != null && payload.isNotEmpty) {
       Navigator.of(Routes.navigatorKey!.currentContext!).pushNamed(payload);
     }
+  }
+
+  Future scheduleAtTimeNotification(
+    CustomNotification notification,
+    int hours,
+    int minutes,
+  ) async {
+    localNotificationsPlugin.zonedSchedule(
+      notification.id,
+      notification.title,
+      notification.body,
+      await _nextInstanceOfTenAM(hours, minutes),
+      NotificationDetails(
+        android: androidDetails,
+      ),
+      payload: notification.payload,
+      androidAllowWhileIdle: true,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  void showNotificationScheduled(
+    CustomNotification notification,
+    Duration duration,
+  ) {
+    final date = DateTime.now().add(duration);
+
+    localNotificationsPlugin.zonedSchedule(
+      notification.id,
+      notification.title,
+      notification.body,
+      tz.TZDateTime.from(date, tz.local),
+      NotificationDetails(
+        android: androidDetails,
+      ),
+      payload: notification.payload,
+      androidAllowWhileIdle: true,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+    );
+  }
+
+  Future<tz.TZDateTime> _nextInstanceOfTenAM(int hours, int minutes) async {
+    final String timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
+    final tz.TZDateTime now = tz.TZDateTime.now(tz.getLocation(timeZoneName));
+    final tz.TZDateTime scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hours,
+      minutes,
+    );
+    return scheduledDate;
   }
 
   void showNotificationPeriodic(
@@ -94,7 +150,11 @@ class NotificationService {
     );
   }
 
-  void cancelLocalNotification() {
+  void cancelLocalNotification(int id) {
+    localNotificationsPlugin.cancel(id);
+  }
+
+  void cancelAllLocalNotification(int id) {
     localNotificationsPlugin.cancelAll();
   }
 

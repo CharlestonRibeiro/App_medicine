@@ -15,7 +15,7 @@ class AuthService extends ChangeNotifier {
     _authCheck();
   }
 
-  void  _authCheck() {
+  void _authCheck() {
     _auth.authStateChanges().listen((User? user) {
       usuario = (user == null) ? null : user;
       isLoading = false;
@@ -61,6 +61,8 @@ class AuthService extends ChangeNotifier {
         throw AuthException('Senha incorreta. Tente novamente');
       } else if (e.code == 'invalid-email') {
         throw AuthException('E-mail inválido. Tente novamente');
+      } else if (e.code == 'too-many-requests') {
+        throw AuthException('Muitas solicitações. Tente novamente mais tarde');
       } else {
         throw AuthException(e.code);
       }

@@ -25,13 +25,14 @@ class AddMedicineController extends ChangeNotifier {
   bool loading = false;
   int? intervalSelected;
   List<String>? listRecomendations;
+  String? notificationId;
   FirebaseFirestore get firestore => FirebaseFirestore.instance;
   FirebaseStorage get storage => FirebaseStorage.instance;
   String listInterval = '';
 
   Future saveMedicine() async {
     final BuildContext context = scaffoldKey.currentContext!;
-    final int random = Random().nextInt(1000000000);
+    final int random = Random().nextInt(100000);
 
     if (formKey.currentState!.validate()) {
       if (xFile == null || imageUploaded == null) {
@@ -80,6 +81,7 @@ class AddMedicineController extends ChangeNotifier {
             'interval': intervalSelected,
             'imageName': imageUploadedName,
             'listInterval': getInterval(),
+            'notificationsId': notificationId,
           });
 
           _buildSnackBar(
@@ -91,9 +93,9 @@ class AddMedicineController extends ChangeNotifier {
           clean();
           closePage();
 
-          NotificationService().showNotificationPeriodic(
+          NotificationService().showLocalNotification(
             CustomNotification(
-              id: random,
+              id: random + 1,
               title: 'Não esqueça de tomar seus remédios!',
               body: 'Acesse à lista de medicamentos!',
               payload: '/',
@@ -117,17 +119,80 @@ class AddMedicineController extends ChangeNotifier {
     final double interval = intervalSelected!.toDouble();
 
     if (aux <= 23) {
+      final a =
+          aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1).split('.');
+
+      final random = Random().nextInt(100000);
+      NotificationService().scheduleAtTimeNotification(
+        CustomNotification(
+          id: random,
+          title: 'Não esqueça de tomar o ${nameController.text} agora!',
+          body: 'Acesse à lista de medicamentos!',
+          payload: '/',
+        ),
+        int.parse(a[0]),
+        int.parse(a[1]),
+      );
+      notificationId = random.toString();
       listInterval = '${aux.toStringAsFixed(2)} ';
     } else {
-      listInterval = '${(aux - 24).toStringAsFixed(2)}} ';
+      final a =
+          aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1).split('.');
+
+      final random = Random().nextInt(100000);
+      NotificationService().scheduleAtTimeNotification(
+        CustomNotification(
+          id: random,
+          title: 'Não esqueça de tomar o ${nameController.text} agora!',
+          body: 'Acesse à lista de medicamentos!',
+          payload: '/',
+        ),
+        int.parse(a[0]),
+        int.parse(a[1]),
+      );
+      notificationId = random.toString();
+      listInterval =
+          '${(aux - 24).toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1)} ';
     }
     while (double.parse(aux.toStringAsFixed(2)) != initalTime) {
       aux += interval;
       if (aux >= 24) {
         aux -= 24;
-        listInterval = '$listInterval${aux.toStringAsFixed(2)} ';
+        final a =
+            aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1).split('.');
+
+        final random = Random().nextInt(100000);
+        NotificationService().scheduleAtTimeNotification(
+          CustomNotification(
+            id: random,
+            title: 'Não esqueça de tomar o ${nameController.text} agora!',
+            body: 'Acesse à lista de medicamentos!',
+            payload: '/',
+          ),
+          int.parse(a[0]),
+          int.parse(a[1]),
+        );
+        notificationId = '$notificationId $random';
+        listInterval =
+            '$listInterval${aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1)} ';
       } else {
-        listInterval = '$listInterval${aux.toStringAsFixed(2)} ';
+        final a = selectedTime!.minute > 9
+            ? aux.toStringAsFixed(2).split('.')
+            : aux.toStringAsFixed(1).split('.');
+        final random = Random().nextInt(100000);
+        NotificationService().scheduleAtTimeNotification(
+          CustomNotification(
+            id: random,
+            title: 'Não esqueça de tomar o ${nameController.text} agora!',
+            body: 'Acesse à lista de medicamentos!',
+            payload: '/',
+          ),
+          int.parse(a[0]),
+          int.parse(a[1]),
+        );
+        notificationId = '$notificationId $random';
+        listInterval =
+            '$listInterval${aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1)} ';
       }
     }
     return listInterval.replaceAll('.', ':');
