@@ -27,7 +27,6 @@ class _MedicineScreenState extends State<HomeScreen> {
           Navigator.of(context).pushNamed(
             '/add',
           );
-
         },
       ),
       appBar: AppBar(
@@ -124,11 +123,21 @@ class _MedicineScreenState extends State<HomeScreen> {
             );
           }
 
+          List<Medicine> medicines = snapshot.data!.docs
+              .map((doc) => Medicine.fromDocument(doc))
+              .toList();
+
+          medicines = medicines
+              .where(
+                (s) => s.name!.toLowerCase().contains(search.toLowerCase()),
+              )
+              .toList();
+
           return ListView(
-            children: snapshot.data!.docs.map(
+            children: medicines.map(
               (document) {
                 return MedicineListTile(
-                  Medicine.fromDocument(document),
+                  document,
                 );
               },
             ).toList(),
@@ -139,7 +148,6 @@ class _MedicineScreenState extends State<HomeScreen> {
             .doc(auth.usuario!.email)
             .collection('medicine')
             .orderBy('name')
-            .where('name', isGreaterThanOrEqualTo: search)
             .snapshots(),
       ),
     );

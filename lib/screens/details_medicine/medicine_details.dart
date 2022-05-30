@@ -98,15 +98,17 @@ class DetailsMedicine extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    '${medicine.description}',
-                    textAlign: TextAlign.justify,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w400,
-                      fontSize: 20,
+                  if (_controller.medicine!.description != '') ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      '${medicine.description}',
+                      textAlign: TextAlign.justify,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w400,
+                        fontSize: 20,
+                      ),
                     ),
-                  ),
+                  ],
                   const SizedBox(height: 15),
                   RichText(
                     text: TextSpan(

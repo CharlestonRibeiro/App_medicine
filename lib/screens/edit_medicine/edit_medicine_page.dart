@@ -19,7 +19,11 @@ class EditMedicinePage extends StatelessWidget {
         onPressed: () async {
           _controller.saveMedicine();
         },
-        child: const Icon(Icons.save_outlined),
+        child: _controller.loading
+            ? const CircularProgressIndicator(
+                backgroundColor: Colors.white,
+              )
+            : const Icon(Icons.save_outlined),
       ),
       appBar: AppBar(
         title: const Text('Editar Medicamento'),

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:app_medicine/helpers/notification_service.dart';
 import 'package:app_medicine/models/medicine.dart';
@@ -11,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 
 class AddMedicineController extends ChangeNotifier {
   Medicine medicine = Medicine(name: '', image: '');
+  Uint8List? imageFile;
 
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
@@ -33,20 +35,31 @@ class AddMedicineController extends ChangeNotifier {
   Future saveMedicine() async {
     final BuildContext context = scaffoldKey.currentContext!;
     final int random = Random().nextInt(100000);
+    loading = true;
+    notifyListeners();
 
+    if (!formKey.currentState!.validate()) {
+      loading = false;
+      notifyListeners();
+      return;
+    }
     if (formKey.currentState!.validate()) {
-      if (xFile == null || imageUploaded == null) {
+      if (xFile == null) {
         _buildSnackBar(
           context: context,
           content: 'Selecione uma imagem!',
           duration: 1,
         );
+        loading = false;
+        notifyListeners();
       } else if (selectedTime == null) {
         _buildSnackBar(
           context: context,
           content: 'Selecione a hora!',
           duration: 1,
         );
+        loading = false;
+        notifyListeners();
       } else if (FirebaseAuth.instance.currentUser == null) {
         _buildSnackBar(
           context: context,
@@ -57,13 +70,18 @@ class AddMedicineController extends ChangeNotifier {
             onPressed: () => Navigator.pushNamed(context, '/'),
           ),
         );
+        loading = false;
+        notifyListeners();
       } else if (intervalSelected == null) {
         _buildSnackBar(
           context: context,
           content: 'Selecione um intervalo em horas!',
           duration: 1,
         );
+        loading = false;
+        notifyListeners();
       } else {
+        await uploadImagetoFireBase();
         try {
           await firestore
               .collection('users')
@@ -77,7 +95,8 @@ class AddMedicineController extends ChangeNotifier {
             'image': imageUploaded,
             'dateInitial':
                 '${DateTime.now().year}/${DateTime.now().month}/${DateTime.now().day}',
-            'timeInitial': '${selectedTime!.hour}:${selectedTime!.minute}',
+            'timeInitial':
+                '${selectedTime!.hour}:${selectedTime!.minute < 10 ? 0 : ''}${selectedTime!.minute}',
             'interval': intervalSelected,
             'imageName': imageUploadedName,
             'listInterval': getInterval(),
@@ -101,7 +120,11 @@ class AddMedicineController extends ChangeNotifier {
               payload: '/',
             ),
           );
+          loading = false;
+          notifyListeners();
         } catch (e) {
+          loading = false;
+          notifyListeners();
           _buildSnackBar(
             context: context,
             content: 'Ocorreu um erro ao salvar o medicamento!$e',
@@ -113,14 +136,14 @@ class AddMedicineController extends ChangeNotifier {
   }
 
   String getInterval() {
-    final double initalTime =
-        double.parse('${selectedTime!.hour}.${selectedTime!.minute}');
+    final double initalTime = double.parse(
+      '${selectedTime!.hour}.${selectedTime!.minute < 10 ? 0 : ''}${selectedTime!.minute}',
+    );
     double aux = initalTime + intervalSelected!.toDouble();
     final double interval = intervalSelected!.toDouble();
 
     if (aux <= 23) {
-      final a =
-          aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1).split('.');
+      final a = aux.toStringAsFixed(2).split('.');
 
       final random = Random().nextInt(100000);
       NotificationService().scheduleAtTimeNotification(
@@ -134,10 +157,9 @@ class AddMedicineController extends ChangeNotifier {
         int.parse(a[1]),
       );
       notificationId = random.toString();
-      listInterval = '${aux.toStringAsFixed(2)} ';
+      listInterval = '${aux.toStringAsFixed(2)} | ';
     } else {
-      final a =
-          aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1).split('.');
+      final a = aux.toStringAsFixed(2).split('.');
 
       final random = Random().nextInt(100000);
       NotificationService().scheduleAtTimeNotification(
@@ -151,15 +173,13 @@ class AddMedicineController extends ChangeNotifier {
         int.parse(a[1]),
       );
       notificationId = random.toString();
-      listInterval =
-          '${(aux - 24).toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1)} ';
+      listInterval = '${(aux - 24).toStringAsFixed(2)} | ';
     }
     while (double.parse(aux.toStringAsFixed(2)) != initalTime) {
       aux += interval;
       if (aux >= 24) {
         aux -= 24;
-        final a =
-            aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1).split('.');
+        final a = aux.toStringAsFixed(2).split('.');
 
         final random = Random().nextInt(100000);
         NotificationService().scheduleAtTimeNotification(
@@ -173,8 +193,7 @@ class AddMedicineController extends ChangeNotifier {
           int.parse(a[1]),
         );
         notificationId = '$notificationId $random';
-        listInterval =
-            '$listInterval${aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1)} ';
+        listInterval = '$listInterval${aux.toStringAsFixed(2)} | ';
       } else {
         final a = selectedTime!.minute > 9
             ? aux.toStringAsFixed(2).split('.')
@@ -191,8 +210,7 @@ class AddMedicineController extends ChangeNotifier {
           int.parse(a[1]),
         );
         notificationId = '$notificationId $random';
-        listInterval =
-            '$listInterval${aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1)} ';
+        listInterval = '$listInterval${aux.toStringAsFixed(2)} | ';
       }
     }
     return listInterval.replaceAll('.', ':');
@@ -204,14 +222,21 @@ class AddMedicineController extends ChangeNotifier {
 
   Future pickImageFromCamera() async {
     xFile = await ImagePicker().pickImage(source: ImageSource.camera);
+    if (xFile != null) {
+      imageFile = await xFile!.readAsBytes();
+      notifyListeners();
+    }
+
     notifyListeners();
-    uploadImage();
   }
 
   Future pickImageFromGallery() async {
     xFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (xFile != null) {
+      imageFile = await xFile!.readAsBytes();
+      notifyListeners();
+    }
     notifyListeners();
-    uploadImage();
   }
 
   void _buildSnackBar({
@@ -239,6 +264,34 @@ class AddMedicineController extends ChangeNotifier {
 
   void getRecomendInitialTime() {
     switch (intervalSelected) {
+      case 2:
+        listRecomendations = [
+          '06:00',
+          '08:00',
+          '10:00',
+          '12:00',
+          '14:00',
+          '16:00',
+          '18:00',
+          '20:00',
+          '22:00',
+          '00:00',
+          '02:00',
+          '04:00',
+        ];
+        break;
+      case 3:
+        listRecomendations = [
+          '06:00',
+          '09:00',
+          '12:00',
+          '15:00',
+          '18:00',
+          '21:00',
+          '00:00',
+          '03:00',
+        ];
+        break;
       case 4:
         listRecomendations = [
           '06:00',
@@ -280,54 +333,18 @@ class AddMedicineController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future uploadImage() async {
-    final BuildContext context = scaffoldKey.currentContext!;
-    if (xFile != null) {
-      await showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          actions: [
-            TextButton(
-              onPressed: () {
-                notifyListeners();
-                Navigator.pop(context);
-              },
-              child: const Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () async {
-                uploadImagetoFireBase();
-                Navigator.pop(context);
-              },
-              child: const Text('OK'),
-            ),
-          ],
-          title: const Text('Deseja enviar o arquivo?'),
-        ),
-      );
-    }
-  }
-
   Future uploadImagetoFireBase() async {
-    loading = true;
-    notifyListeners();
     final File file = File(xFile!.path);
+    imageUploadedName = xFile!.name;
     final Reference _reference = storage.ref('images').child(xFile!.name);
-    final UploadTask task = _reference.putFile(
-      file,
-    );
-    task.snapshotEvents.listen((snapshot) async {
-      if (snapshot.state == TaskState.running) {
-        total = snapshot.bytesTransferred / snapshot.totalBytes;
-        notifyListeners();
-      } else if (snapshot.state == TaskState.success) {
-        imageUploaded = await snapshot.ref.getDownloadURL();
-        imageUploadedName = xFile!.name;
-        medicine.copyWith(image: imageUploaded);
-        notifyListeners();
-      }
-    });
-    loading = false;
+    await _reference
+        .putFile(
+          file,
+        )
+        .then(
+          (element) async => imageUploaded = await element.ref.getDownloadURL(),
+        );
+
     notifyListeners();
   }
 

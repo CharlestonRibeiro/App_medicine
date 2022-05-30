@@ -29,16 +29,16 @@ class EditTimePickerWidget extends StatelessWidget {
                     'Horarios recomendados para o intervalo',
                     style: TextStyle(fontSize: 16),
                   ),
-                  Row(
+                  Wrap(
                     children: _controller.listRecomendations!
                         .map(
                           (e) => Text(
-                            '$e ',
+                            '$e | ',
                             style: const TextStyle(fontSize: 16),
                           ),
                         )
                         .toList(),
-                  ),
+                  )
                 ],
               ),
             ),

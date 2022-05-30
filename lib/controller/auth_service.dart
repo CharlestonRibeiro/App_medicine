@@ -78,7 +78,7 @@ class AuthService extends ChangeNotifier {
       isLoading = false;
       throw AuthException(e.code);
     }
-    isLoading = false;
+    isLoading = false; 
   }
 
   Future logout() async {

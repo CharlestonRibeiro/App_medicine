@@ -30,18 +30,29 @@ class EditListButtonTime extends StatelessWidget {
               ),
             ),
           Padding(
-            padding: const EdgeInsets.only(top: 5),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Wrap(
               children: [
+                ElevatedButton(
+                  onPressed: () => controller.setIntervalSelected(2),
+                  child: const Text('2'),
+                ),
+                const SizedBox(width: 5),
+                ElevatedButton(
+                  onPressed: () => controller.setIntervalSelected(3),
+                  child: const Text('3'),
+                ),
+                const SizedBox(width: 5),
                 ElevatedButton(
                   onPressed: () => controller.setIntervalSelected(4),
                   child: const Text('4'),
                 ),
+                const SizedBox(width: 5),
                 ElevatedButton(
                   onPressed: () => controller.setIntervalSelected(6),
                   child: const Text('6'),
                 ),
+                const SizedBox(width: 5),
                 ElevatedButton(
                   onPressed: () => controller.setIntervalSelected(8),
                   child: const Text('8'),
@@ -50,6 +61,7 @@ class EditListButtonTime extends StatelessWidget {
                   onPressed: () => controller.setIntervalSelected(12),
                   child: const Text('12'),
                 ),
+                const SizedBox(width: 5),
                 ElevatedButton(
                   onPressed: () => controller.setIntervalSelected(24),
                   child: const Text('24'),

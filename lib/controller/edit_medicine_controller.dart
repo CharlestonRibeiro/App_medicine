@@ -1,10 +1,14 @@
+import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:app_medicine/helpers/notification_service.dart';
 import 'package:app_medicine/models/medicine.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class EditMedicineController extends ChangeNotifier {
   Medicine? medicine;
@@ -12,14 +16,18 @@ class EditMedicineController extends ChangeNotifier {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   TextEditingController nameController = TextEditingController();
   TextEditingController descController = TextEditingController();
-
+  XFile? xFile;
   TimeOfDay? selectedTime;
   TimeOfDay? timeOfDay;
   bool loading = false;
   String listInterval = '';
+  String? imageUploadedName;
   List<String>? listRecomendations;
   int? intervalSelected;
   String notificationId = '';
+  Uint8List? imageFile;
+  String? imageUploaded;
+  FirebaseStorage get storage => FirebaseStorage.instance;
   FirebaseFirestore get firestore => FirebaseFirestore.instance;
 
   void setMedicine(Medicine medicine) {
@@ -39,14 +47,14 @@ class EditMedicineController extends ChangeNotifier {
   }
 
   String getInterval() {
-    final double initalTime =
-        double.parse('${selectedTime!.hour}.${selectedTime!.minute}');
+    final double initalTime = double.parse(
+      '${selectedTime!.hour}.${selectedTime!.minute < 10 ? 0 : ''}${selectedTime!.minute}',
+    );
     double aux = initalTime + intervalSelected!.toDouble();
     final double interval = intervalSelected!.toDouble();
 
     if (aux <= 23) {
-      final a =
-          aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1).split('.');
+      final a = aux.toStringAsFixed(2).split('.');
 
       final random = Random().nextInt(100000);
       NotificationService().scheduleAtTimeNotification(
@@ -60,10 +68,9 @@ class EditMedicineController extends ChangeNotifier {
         int.parse(a[1]),
       );
       notificationId = random.toString();
-      listInterval = '${aux.toStringAsFixed(2)} ';
+      listInterval = '${aux.toStringAsFixed(2)} | ';
     } else {
-      final a =
-          aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1).split('.');
+      final a = aux.toStringAsFixed(2).split('.');
 
       final random = Random().nextInt(100000);
       NotificationService().scheduleAtTimeNotification(
@@ -77,15 +84,13 @@ class EditMedicineController extends ChangeNotifier {
         int.parse(a[1]),
       );
       notificationId = random.toString();
-      listInterval =
-          '${(aux - 24).toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1)} ';
+      listInterval = '${(aux - 24).toStringAsFixed(2)} | ';
     }
     while (double.parse(aux.toStringAsFixed(2)) != initalTime) {
       aux += interval;
       if (aux >= 24) {
         aux -= 24;
-        final a =
-            aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1).split('.');
+        final a = aux.toStringAsFixed(2).split('.');
 
         final random = Random().nextInt(100000);
         NotificationService().scheduleAtTimeNotification(
@@ -99,8 +104,7 @@ class EditMedicineController extends ChangeNotifier {
           int.parse(a[1]),
         );
         notificationId = '$notificationId $random';
-        listInterval =
-            '$listInterval${aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1)} ';
+        listInterval = '$listInterval${aux.toStringAsFixed(2)} | ';
       } else {
         final a = selectedTime!.minute > 9
             ? aux.toStringAsFixed(2).split('.')
@@ -117,8 +121,7 @@ class EditMedicineController extends ChangeNotifier {
           int.parse(a[1]),
         );
         notificationId = '$notificationId $random';
-        listInterval =
-            '$listInterval${aux.toStringAsFixed(selectedTime!.minute > 9 ? 2 : 1)} ';
+        listInterval = '$listInterval${aux.toStringAsFixed(2)} | ';
       }
     }
     return listInterval.replaceAll('.', ':');
@@ -126,6 +129,34 @@ class EditMedicineController extends ChangeNotifier {
 
   void getRecomendInitialTime() {
     switch (intervalSelected) {
+      case 2:
+        listRecomendations = [
+          '06:00',
+          '08:00',
+          '10:00',
+          '12:00',
+          '14:00',
+          '16:00',
+          '18:00',
+          '20:00',
+          '22:00',
+          '00:00',
+          '02:00',
+          '04:00',
+        ];
+        break;
+      case 3:
+        listRecomendations = [
+          '06:00',
+          '09:00',
+          '12:00',
+          '15:00',
+          '18:00',
+          '21:00',
+          '00:00',
+          '03:00',
+        ];
+        break;
       case 4:
         listRecomendations = [
           '06:00',
@@ -173,9 +204,31 @@ class EditMedicineController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future uploadImagetoFireBase() async {
+    final File file = File(xFile!.path);
+    imageUploadedName = xFile!.name;
+    final Reference _reference = storage.ref('images').child(xFile!.name);
+    await _reference
+        .putFile(
+          file,
+        )
+        .then(
+          (element) async => imageUploaded = await element.ref.getDownloadURL(),
+        );
+
+    notifyListeners();
+  }
+
   Future saveMedicine() async {
     final BuildContext context = scaffoldKey.currentContext!;
+    loading = true;
+    notifyListeners();
 
+    if (!formKey.currentState!.validate()) {
+      loading = false;
+      notifyListeners();
+      return;
+    }
     if (formKey.currentState!.validate()) {
       if (selectedTime == null) {
         _buildSnackBar(
@@ -183,12 +236,16 @@ class EditMedicineController extends ChangeNotifier {
           content: 'Selecione a hora!',
           duration: 1,
         );
+        loading = false;
+        notifyListeners();
       } else if (intervalSelected == null) {
         _buildSnackBar(
           context: context,
           content: 'Selecione um intervalo em horas!',
           duration: 1,
         );
+        loading = false;
+        notifyListeners();
       } else if (FirebaseAuth.instance.currentUser == null) {
         _buildSnackBar(
           context: context,
@@ -199,7 +256,12 @@ class EditMedicineController extends ChangeNotifier {
             onPressed: () => Navigator.pushNamed(context, '/'),
           ),
         );
+        loading = false;
+        notifyListeners();
       } else {
+        if (xFile != null) {
+          await uploadImagetoFireBase();
+        }
         try {
           cancelAllNotifications();
           await firestore
@@ -211,11 +273,14 @@ class EditMedicineController extends ChangeNotifier {
             'id': medicine!.id,
             'name': nameController.text,
             'description': descController.text,
-            'image': medicine!.image,
+            'image': xFile == null ? medicine!.image : imageUploaded,
             'dateInitial':
                 '${DateTime.now().year}/${DateTime.now().month}/${DateTime.now().day}',
-            'timeInitial': '${selectedTime!.hour}:${selectedTime!.minute}',
+            'timeInitial':
+                '${selectedTime!.hour}:${selectedTime!.minute < 10 ? 0 : ''}${selectedTime!.minute}',
             'interval': intervalSelected,
+            'imageName':
+                xFile != null ? imageUploadedName : medicine!.imageName,
             'listInterval': getInterval(),
             'notificationsId': notificationId,
           });
@@ -228,7 +293,11 @@ class EditMedicineController extends ChangeNotifier {
 
           clean();
           _navigatorPushNamed();
+          loading = false;
+          notifyListeners();
         } catch (e) {
+          loading = false;
+          notifyListeners();
           _buildSnackBar(
             context: context,
             content: 'Ocorreu um erro ao atualizar o medicamento! Erro: $e',
@@ -237,6 +306,25 @@ class EditMedicineController extends ChangeNotifier {
         }
       }
     }
+  }
+
+  Future pickImageFromCamera() async {
+    xFile = await ImagePicker().pickImage(source: ImageSource.camera);
+    if (xFile != null) {
+      imageFile = await xFile!.readAsBytes();
+      notifyListeners();
+    }
+
+    notifyListeners();
+  }
+
+  Future pickImageFromGallery() async {
+    xFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (xFile != null) {
+      imageFile = await xFile!.readAsBytes();
+      notifyListeners();
+    }
+    notifyListeners();
   }
 
   void cancelAllNotifications() {
@@ -254,6 +342,9 @@ class EditMedicineController extends ChangeNotifier {
     nameController.text = medicine.name!;
     descController.text = medicine.description!;
     intervalSelected = int.parse(medicine.interval!);
+    final hours = medicine.timeInitial!.split(':');
+    selectedTime =
+        TimeOfDay(hour: int.parse(hours[0]), minute: int.parse(hours[1]));
     getRecomendInitialTime();
     notifyListeners();
   }
@@ -287,6 +378,10 @@ class EditMedicineController extends ChangeNotifier {
     intervalSelected = null;
     listRecomendations = null;
     listInterval = '';
+    imageFile = null;
+    imageUploaded = null;
+    imageUploadedName = null;
+    xFile = null;
     notifyListeners();
   }
 }

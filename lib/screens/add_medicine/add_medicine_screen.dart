@@ -35,11 +35,14 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       ),
       backgroundColor: ColorsApp.white,
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.red,
         onPressed: () {
           _controller.saveMedicine();
         },
-        child: const Icon(Icons.save_outlined),
+        child: _controller.loading
+            ? const CircularProgressIndicator(
+                backgroundColor: Colors.white,
+              )
+            : const Icon(Icons.save_outlined),
       ),
       body: ListView(
         children: const [
