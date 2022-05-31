@@ -70,6 +70,7 @@ class EditMedicineController extends ChangeNotifier {
       notificationId = random.toString();
       listInterval = '${aux.toStringAsFixed(2)} | ';
     } else {
+      aux -= 24;
       final a = aux.toStringAsFixed(2).split('.');
 
       final random = Random().nextInt(100000);
@@ -84,7 +85,7 @@ class EditMedicineController extends ChangeNotifier {
         int.parse(a[1]),
       );
       notificationId = random.toString();
-      listInterval = '${(aux - 24).toStringAsFixed(2)} | ';
+      listInterval = '${aux.toStringAsFixed(2)} | ';
     }
     while (double.parse(aux.toStringAsFixed(2)) != initalTime) {
       aux += interval;
