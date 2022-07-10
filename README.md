@@ -1,16 +1,33 @@
-# app_medicine
 
-A new Flutter application.
 
-## Getting Started
+# TimeToDose
 
-This project is a starting point for a Flutter application.
+Aplicação desenvolvida para auxiliar no controle de medicamentos pessoais.
 
-A few resources to get you started if this is your first Flutter project:
+## Disponibilizado na Play Store: 
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+<https://play.google.com/store/apps/details?id=charlestonpassos.com.app_medicine>
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+
+- [x] Flutter.
+- [x] Firebase.
+- [x] CRUD dos medicamentos.
+- [x] Imagem do medicamento.
+- [x] Notificações.
+- [x] Indicação de melhores horarios para medicação.
+
+## Telas
+
+<img src="https://github.com/CharlestonRibeiro/App_medicine/blob/main/assets/img/1.jpeg?raw=true" width="300" height="500" />| 
+<img src="https://github.com/CharlestonRibeiro/App_medicine/blob/main/assets/img/4.jpeg?raw=true" width="300" height="500" />|
+<img src="https://github.com/CharlestonRibeiro/App_medicine/blob/main/assets/img/5.jpeg?raw=true" width="300" height="500" />
+
+<img src="https://github.com/CharlestonRibeiro/App_medicine/blob/main/assets/img/6.jpeg?raw=true" width="300" height="500" />|
+<img src="https://github.com/CharlestonRibeiro/App_medicine/blob/main/assets/img/10.jpeg?raw=true" width="300" height="500" />|
+<img src="https://github.com/CharlestonRibeiro/App_medicine/blob/main/assets/img/10.jpeg?raw=true" width="300" height="500" />
+
+<img src="https://github.com/CharlestonRibeiro/App_medicine/blob/main/assets/img/9.jpeg?raw=true" width="300" height="500" />|
+<img src="https://github.com/CharlestonRibeiro/App_medicine/blob/main/assets/img/2.jpeg?raw=true" width="300" height="500" />|
+<img src="https://github.com/CharlestonRibeiro/App_medicine/blob/main/assets/img/3.jpeg?raw=true" width="300" height="500" />
+
+<img src="https://github.com/CharlestonRibeiro/App_medicine/blob/main/assets/img/8.jpeg?raw=true" width="300" height="500" />
